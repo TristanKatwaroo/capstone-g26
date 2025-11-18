@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { transcribeAudio } = require('./services/transcriptionService');
 const app = express();
 const PORT = 8080;
 
