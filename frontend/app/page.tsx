@@ -24,14 +24,14 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-8">
+    <div className="flex min-h-screen flex-col items-center justify-center p-8">
       <main className="flex flex-col items-center gap-8 w-full">
         
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-4xl font-bold tracking-tight">
           AI Censorship Tool
         </h1>
         
-        <p className="text-lg text-gray-600 text-center max-w-xl">
+        <p className="text-lg text-center max-w-xl opacity-70">
           Upload a video to automatically detect and flag profanity using AI.
         </p>
 
