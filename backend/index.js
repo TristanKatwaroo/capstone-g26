@@ -31,15 +31,13 @@ app.get('/api/test', (req, res) => {
 });
 
 app.post("/api/upload", ffmpegService.upload.single('file'), (req, res) => {
-  const filePath = req.file.path;
   console.log("Request From Upload")
-  ffmpegService.extractAudio(filePath);
   res.send("Upload Complete");
 });
 
 app.post("/api/extractAudio", (req, res) => {
   ffmpegService.extractAudio("uploads/input.mp4");
-  res.send("Done?");
+  res.send("Audio Extracted")
 })
 
 app.post('/api/mergeAudioVideo', (req, res) => {
