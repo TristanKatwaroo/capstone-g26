@@ -37,7 +37,7 @@ function extractAudio(input_file){
 
 function mergeAudioVideo(videofile, audiofile){
 
-  const ffmpegProcess = spawn(ffmpegpath, ["-i", videofile, "-i", audiofile, "-c:v copy", "-c:a aac", "-map 0:v:0", "-map 1:a:0", "output.mp4"]);
+  const ffmpegProcess = spawn(ffmpegpath, ["-i", videofile, "-i", audiofile, "-c:v", "copy", "-c:a", "aac", "-map", "0:v:0", "-map", "1:a:0", "uploads/output.mp4"]);
 
   ffmpegProcess.on("error", (error) => [
     console.log(`error: ${error.message}`)
