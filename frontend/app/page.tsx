@@ -1,5 +1,7 @@
 "use client";
 
+import VideoUpload from "../components/VideoUpload";
+
 export default function Home() {
 
   const handleTestConnection = async () => {
@@ -22,18 +24,19 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 dark:bg-black">
-      <main className="flex flex-col items-center gap-12 py-32 px-16">
-        <h1 className="text-3xl font-semibold text-black dark:text-zinc-50">
-          Capstone Project (Group 26)
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-8">
+      <main className="flex flex-col items-center gap-8 w-full">
+        
+        <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+          AI Censorship Tool
         </h1>
         
-        <button
-          onClick={handleTestConnection}
-          className="rounded-full bg-blue-600 px-6 py-3 text-lg font-semibold text-white transition-colors hover:bg-blue-700"
-        >
-          Test Backend Connection
-        </button>
+        <p className="text-lg text-gray-600 text-center max-w-xl">
+          Upload a video to automatically detect and flag profanity using AI.
+        </p>
+
+        <VideoUpload />
+
       </main>
     </div>
   );
