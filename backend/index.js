@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { transcribeAudio } = require('./services/transcriptionService');
+const { transcribeAudio, filterblackList } = require('./services/transcriptionService');
 const app = express();
 const PORT = 8080;
 
@@ -44,11 +44,16 @@ app.post('/api/test-transcription', async (req, res) => {
       return res.status(400).json({ error: 'File path is required' });
     }
 
+    // Transcribes test.mp3 audio file
     const transcript = await transcribeAudio(filePath);
+    // Filters out black listed words in list
+    const filteredWords = filterblackList(transcript.words);
+    const filteredTranscript = filteredWords.map(w => w.text).join(" ");
     
     // Send back the words array so we can see the timestamps
     res.json({ 
       message: "Success", 
+      transcript: filteredTranscript,
       words: transcript.words 
     });
 
