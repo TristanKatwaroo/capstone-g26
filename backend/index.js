@@ -66,12 +66,38 @@ app.post('/api/test-transcription', async (req, res) => {
     // Send back the words array so we can see the timestamps
     res.json({ 
       message: "Success", 
-      transcript: filteredTranscript,
-      words: transcript.words 
+      // transcript: filteredTranscript,
+      words: filteredWords 
     });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, res) => {
+  try {
+    const videoPath = req.file.path;
+    const audioPath = `uploads/${req.file.filename}.mp3`; // Determine output path
+
+    // 1. Extract Audio (Await your new Promise-based function)
+    await ffmpegService.extractAudio(videoPath, audioPath);
+
+    // 2. Transcribe
+    const transcript = await transcribeAudio(audioPath);
+
+    // 3. Filter
+    const processedWords = filterblackList(transcript.words);
+
+    // 4. Respond
+    res.json({ 
+      message: "Processing Complete", 
+      words: processedWords 
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Processing failed" });
   }
 });
 
