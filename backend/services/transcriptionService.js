@@ -1,5 +1,10 @@
 require('dotenv').config();
+// Making sure it reads the key correctly
+console.log("AssemblyAI Key:", process.env.ASSEMBLYAI_API_KEY);
+
 const { AssemblyAI } = require('assemblyai');
+//const blacklist = ["test", "service"];
+const blackList = require('./blackList');
 
 // Initialize the AssemblyAI client
 const client = new AssemblyAI({
@@ -44,4 +49,15 @@ const transcribeAudio = async (filePath) => {
   }
 };
 
-module.exports = { transcribeAudio };
+//Replaces black listed words with "*censor*" for users to easily tell
+const filterblackList = (words) => {
+  return words.map(wordObj => {
+    const cleanWord = wordObj.text.toLowerCase().replace(/[^\w]/g, "");
+    if (blackList.includes(cleanWord)) {
+      return { ...wordObj, text: "*censor*" };
+    }
+    return wordObj;
+  });
+};
+
+module.exports = { transcribeAudio, filterblackList };
