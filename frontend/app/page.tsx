@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import VideoUpload from "../components/VideoUpload";
+import Results from "../components/Results";
 
 export default function Home() {
 
@@ -23,6 +25,8 @@ export default function Home() {
     }
   };
 
+  const [analysisResults, setAnalysisResults] = useState<any[] | null>(null);
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8">
       <main className="flex flex-col items-center gap-8 w-full">
@@ -31,11 +35,19 @@ export default function Home() {
           AI Censorship Tool
         </h1>
         
-        <p className="text-lg text-center max-w-xl opacity-70">
-          Upload a video to automatically detect and flag profanity using AI.
-        </p>
-
-        <VideoUpload />
+        {!analysisResults ? (
+          <>
+            <p className="text-lg text-center max-w-xl opacity-70">
+              Upload a video to automatically detect and flag profanity using AI.
+            </p>
+            <VideoUpload onAnalysisComplete={setAnalysisResults} />
+          </>
+        ) : (
+          <Results 
+            initialWords={analysisResults} 
+            onReset={() => setAnalysisResults(null)} 
+          />
+        )}
 
       </main>
     </div>

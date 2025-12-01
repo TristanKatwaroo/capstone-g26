@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-export default function VideoUpload() {
+interface VideoUploadProps {
+  onAnalysisComplete: (words: any[]) => void;
+}
+
+export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -43,13 +47,10 @@ export default function VideoUpload() {
     setStatusMessage("Uploading and processing...");
 
     try {
-      // 1. Create a FormData object to hold the file
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      // 2. Send to your Express backend
-      // Note: Ensure your backend endpoint is running and correct
-      const response = await fetch("http://localhost:8080/api/upload", {
+      const response = await fetch("http://localhost:8080/api/process-video", {
         method: "POST",
         body: formData,
       });
@@ -58,14 +59,22 @@ export default function VideoUpload() {
         throw new Error(`Server error: ${response.statusText}`);
       }
 
-      // 3. Handle the result
-      // (For now, we just show the success message. Later, this will be the flagged words list)
-      const data = await response.text(); // or .json() if your backend returns JSON
-      setStatusMessage(`Success: ${data}`);
+      const data = await response.json();
+      console.log("Processing Results:", data);
+
+      if (data.words) {
+        setStatusMessage(`Success! Found words. Loading results...`);
+        
+        setTimeout(() => {
+           onAnalysisComplete(data.words);
+        }, 1000);
+      } else {
+        setStatusMessage("Processing complete, but no transcript returned.");
+      }
       
     } catch (error) {
       console.error("Upload failed:", error);
-      setStatusMessage("Error: Upload failed. Check console for details.");
+      setStatusMessage("Error: Processing failed. Check console.");
     } finally {
       setIsUploading(false);
     }

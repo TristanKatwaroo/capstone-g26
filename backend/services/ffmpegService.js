@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 
-const ffmpegpath = './ffmpeg/ffmpeg.exe'
+// const ffmpegpath = './ffmpeg/ffmpeg.exe'
+const ffmpegpath = 'ffmpeg'
 
 
 const multer = require('multer');
@@ -17,21 +18,24 @@ const storage = multer.diskStorage({
 const upload = multer({storage});
 
 
-function extractAudio(input_file){
-    const ffmpegProcess = spawn(ffmpegpath, ["-i", input_file, "uploads/output.mp3"]);
-    
-    ffmpegProcess.on('error', (error) => {
-        console.log(`error: ${error.message}`)
-    });
-    ffmpegProcess.stderr.on("data", (data) => {
-        console.log(`stderr: ${data}`);
-    });
-    ffmpegProcess.on("close", (code) => {
-        if(code===0){
-            console.log("Audio Successfully Extracted.");
-        } else {
-            console.log(`Error Extracting Audio. Code ${code}`);
-        }
+function extractAudio(input_file, output_file) {
+    return new Promise((resolve, reject) => {
+        const ffmpegProcess = spawn(ffmpegpath, ["-i", input_file, output_file]);
+        
+        ffmpegProcess.on('error', (error) => {
+            console.log(`error: ${error.message}`);
+            reject(error);
+        });
+        
+        ffmpegProcess.on("close", (code) => {
+            if (code === 0) {
+                console.log("Audio Successfully Extracted.");
+                resolve();
+            } else {
+                console.log(`Error Extracting Audio. Code ${code}`);
+                reject(new Error(`FFmpeg exited with code ${code}`));
+            }
+        });
     });
 };
 

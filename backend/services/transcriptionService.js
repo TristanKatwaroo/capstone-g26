@@ -54,9 +54,9 @@ const filterblackList = (words) => {
   return words.map(wordObj => {
     const cleanWord = wordObj.text.toLowerCase().replace(/[^\w]/g, "");
     if (blackList.includes(cleanWord)) {
-      return { ...wordObj, text: "*censor*" };
+      return { ...wordObj, isCensored: true }; 
     }
-    return wordObj;
+    return { ...wordObj, isCensored: false };
   });
 };
 
