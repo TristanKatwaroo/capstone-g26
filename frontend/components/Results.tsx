@@ -19,10 +19,11 @@ interface UIWord extends BackendWord {
 
 interface ResultsProps {
   initialWords: BackendWord[];
+  filename: string;
   onReset: () => void;
 }
 
-export default function Results({ initialWords, onReset }: ResultsProps) {
+export default function Results({ initialWords, filename, onReset }: ResultsProps) {
   // 1. Initialize State: Map backend data to UI data
   // We explicitly separate "Detection" (isFlagged) from "Action" (isSelected)
   const [words, setWords] = useState<UIWord[]>(() => 
@@ -64,15 +65,50 @@ export default function Results({ initialWords, onReset }: ResultsProps) {
   const handleExport = async () => {
     setIsExporting(true);
     
-    // Filter to get only the words the user has CONFIRMED they want to censor
-    const finalCensorshipList = words.filter(w => w.isSelected);
+    // 1. Filter to get only the segments the user wants to censor
+    const segmentsToMute = words
+      .filter(w => w.isSelected)
+      .map(w => ({
+        start: w.start / 1000, // Convert ms to seconds for FFmpeg
+        end: w.end / 1000
+      }));
 
-    console.log("Exporting with final list:", finalCensorshipList);
+    try {
+      console.log("Requesting export for", filename, segmentsToMute);
 
-    setTimeout(() => {
-      alert(`Export Complete! Applied censorship to ${finalCensorshipList.length} words.`);
+      // 2. Call the backend
+      const response = await fetch("http://localhost:8080/api/export-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: filename,
+          censorshipSegments: segmentsToMute
+        })
+      });
+
+      if (!response.ok) throw new Error("Export failed");
+
+      // 3. Convert response to a Blob (Binary file)
+      const blob = await response.blob();
+
+      // 4. Trigger Browser Download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `censored_${filename}`; // The name the file will save as
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      alert("Video downloaded successfully!");
+
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("Failed to export video.");
+    } finally {
       setIsExporting(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -88,32 +124,34 @@ export default function Results({ initialWords, onReset }: ResultsProps) {
         </div>
         <button 
           onClick={onReset}
-          className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white underline"
+          className="text-sm opacity-50 hover:opacity-100 underline"
         >
           Upload New Video
         </button>
       </div>
 
       {/* Results Table */}
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm">
+      {/* Used border-foreground/10 instead of specific gray borders */}
+      <div className="border border-foreground/10 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-100 dark:border-zinc-800">
+            {/* Used bg-foreground/5 for a subtle header background in any mode */}
+            <thead className="bg-foreground/5 border-b border-foreground/10">
               <tr>
-                <th className="px-6 py-4 font-semibold">Word Detected</th>
-                <th className="px-6 py-4 font-semibold">Timestamp</th>
-                <th className="px-6 py-4 font-semibold">Confidence</th>
-                <th className="px-6 py-4 font-semibold text-right">Status</th>
+                <th className="px-6 py-4 font-semibold opacity-90">Word Detected</th>
+                <th className="px-6 py-4 font-semibold opacity-90">Timestamp</th>
+                <th className="px-6 py-4 font-semibold opacity-90">Confidence</th>
+                <th className="px-6 py-4 font-semibold opacity-90 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
+            <tbody className="divide-y divide-foreground/10">
               {displayWords.map((word, index) => (
                 <tr 
                     key={index} 
                     className={`transition-colors ${
                         word.isSelected 
-                            ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20" // Highlighted if active
-                            : "opacity-60 hover:opacity-100 hover:bg-gray-50 dark:hover:bg-zinc-800/50" // Dimmed if ignored
+                            ? "bg-red-500/10 hover:bg-red-500/15" // Highlighted if active (red tint works in both modes)
+                            : "opacity-60 hover:opacity-100 hover:bg-foreground/5" // Dimmed if ignored
                     }`}
                 >
                   <td className="px-6 py-4 font-medium text-red-600 dark:text-red-400">
@@ -133,7 +171,8 @@ export default function Results({ initialWords, onReset }: ResultsProps) {
                         checked={word.isSelected}
                         onChange={() => toggleSelection(index)}
                       />
-                      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                      {/* Toggle Switch: bg-foreground/20 is a perfect neutral gray in both modes */}
+                      <div className="relative w-11 h-6 bg-foreground/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                       <span className="ms-3 text-sm font-medium min-w-[50px]">
                         {word.isSelected ? "Censor" : "Ignore"}
                       </span>

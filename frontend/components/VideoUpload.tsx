@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 interface VideoUploadProps {
-  onAnalysisComplete: (words: any[]) => void;
+  onAnalysisComplete: (words: any[], filename: string) => void;
 }
 
 export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
@@ -66,7 +66,7 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
         setStatusMessage(`Success! Found words. Loading results...`);
         
         setTimeout(() => {
-           onAnalysisComplete(data.words);
+           onAnalysisComplete(data.words, selectedFile.name);
         }, 1000);
       } else {
         setStatusMessage("Processing complete, but no transcript returned.");

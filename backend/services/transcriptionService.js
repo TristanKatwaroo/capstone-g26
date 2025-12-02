@@ -30,6 +30,10 @@ const transcribeAudio = async (filePath) => {
       audio: uploadUrl,
       // We don't need speaker labels for the MVP, but we absolutely need word timestamps
       // which AssemblyAI provides by default.
+      speech_model: 'best',
+      word_boost: blackList, // Tell AI: "These words are important, don't skip them"
+      boost_param: 'high',   // Increase sensitivity to these words
+      filter_profanity: false // Explicitly disable any default censoring
     });
 
     // Step 3: Check status
@@ -52,11 +56,20 @@ const transcribeAudio = async (filePath) => {
 //Replaces black listed words with "*censor*" for users to easily tell
 const filterblackList = (words) => {
   return words.map(wordObj => {
-    const cleanWord = wordObj.text.toLowerCase().replace(/[^\w]/g, "");
-    if (blackList.includes(cleanWord)) {
-      return { ...wordObj, isCensored: true }; 
-    }
-    return { ...wordObj, isCensored: false };
+    const cleanDisplayWord = wordObj.text.replace(/[.,?!:;"]/g, "");
+
+    // 2. Clean the text for Comparison (Lowercase)
+    const comparisonWord = cleanDisplayWord.toLowerCase();
+
+    // 3. Check against blacklist
+    const isMatch = blackList.includes(comparisonWord);
+
+    // 4. Return the object with the NEW clean text
+    return { 
+        ...wordObj, 
+        text: cleanDisplayWord, // <--- Overwrite the original text with the clean version
+        isCensored: isMatch 
+    };
   });
 };
 

@@ -26,13 +26,19 @@ export default function Home() {
   };
 
   const [analysisResults, setAnalysisResults] = useState<any[] | null>(null);
+  const [currentFilename, setCurrentFilename] = useState<string | null>(null);
+
+  const handleAnalysisComplete = (results: any[], filename: string) => {
+    setAnalysisResults(results);
+    setCurrentFilename(filename);
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8">
       <main className="flex flex-col items-center gap-8 w-full">
         
         <h1 className="text-4xl font-bold tracking-tight">
-          AI Censorship Tool
+          CleanCut
         </h1>
         
         {!analysisResults ? (
@@ -40,11 +46,12 @@ export default function Home() {
             <p className="text-lg text-center max-w-xl opacity-70">
               Upload a video to automatically detect and flag profanity using AI.
             </p>
-            <VideoUpload onAnalysisComplete={setAnalysisResults} />
+            <VideoUpload onAnalysisComplete={handleAnalysisComplete} />
           </>
         ) : (
           <Results 
-            initialWords={analysisResults} 
+            initialWords={analysisResults}
+            filename={currentFilename!}
             onReset={() => setAnalysisResults(null)} 
           />
         )}
