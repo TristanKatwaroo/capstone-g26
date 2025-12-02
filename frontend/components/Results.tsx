@@ -141,7 +141,7 @@ export default function Results({ initialWords, filename, onReset }: ResultsProp
                 <th className="px-6 py-4 font-semibold opacity-90">Word Detected</th>
                 <th className="px-6 py-4 font-semibold opacity-90">Timestamp</th>
                 <th className="px-6 py-4 font-semibold opacity-90">Confidence</th>
-                <th className="px-6 py-4 font-semibold opacity-90 text-right">Status</th>
+                <th className="px-6 py-4 font-semibold opacity-90 text-right">Censored</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-foreground/10">
@@ -173,9 +173,9 @@ export default function Results({ initialWords, filename, onReset }: ResultsProp
                       />
                       {/* Toggle Switch: bg-foreground/20 is a perfect neutral gray in both modes */}
                       <div className="relative w-11 h-6 bg-foreground/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-                      <span className="ms-3 text-sm font-medium min-w-[50px]">
+                      {/* <span className="ms-3 text-sm font-medium min-w-[50px]">
                         {word.isSelected ? "Censor" : "Ignore"}
-                      </span>
+                      </span> */}
                     </label>
                   </td>
                 </tr>
