@@ -86,6 +86,14 @@ app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, 
     // 2. Transcribe
     const transcript = await transcribeAudio(audioPath);
 
+    console.log("\n🔍 --- FULL TRANSCRIPT ANALYSIS ---");
+    transcript.words.forEach((word, index) => {
+      console.log(
+        `[${index}] Word: "${word.text}" | Confidence: ${(word.confidence * 100).toFixed(1)}%`
+      );
+    });
+    console.log("------------------------------------\n");
+
     // 3. Filter
     const processedWords = filterblackList(transcript.words);
 
@@ -98,6 +106,37 @@ app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Processing failed" });
+  }
+});
+
+app.post("/api/export-video", express.json(), async (req, res) => {
+  try {
+    const { filename, censorshipSegments } = req.body;
+
+    if (!filename || !censorshipSegments) {
+      return res.status(400).json({ error: "Filename and segments required" });
+    }
+
+    const inputPath = `uploads/${filename}`;
+    const outputPath = `uploads/censored_${filename}`;
+
+    console.log(`Processing export for: ${filename} with ${censorshipSegments.length} mutes.`);
+
+    // 1. Run the FFmpeg Job
+    await ffmpegService.censorVideo(inputPath, outputPath, censorshipSegments);
+
+    // 2. Send the file back to the user
+    // res.download automatically sets the headers for a file download
+    res.download(outputPath, `censored_${filename}`, (err) => {
+      if (err) {
+        console.error("Download error:", err);
+        // Note: Can't send JSON error here if headers are already sent
+      }
+    });
+
+  } catch (error) {
+    console.error("Export failed:", error);
+    res.status(500).json({ error: "Export failed" });
   }
 });
 
