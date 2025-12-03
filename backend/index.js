@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 
 const ffmpegService = require('./services/ffmpegService');
 const { transcribeAudio, filterblackList } = require('./services/transcriptionService');
@@ -76,14 +77,21 @@ app.post('/api/test-transcription', async (req, res) => {
 });
 
 app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, res) => {
+  let videoPath = null;
+  let audioPath = null;
+  
   try {
-    const videoPath = req.file.path;
-    const audioPath = `uploads/${req.file.filename}.mp3`; // Determine output path
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-    // 1. Extract Audio (Await your new Promise-based function)
+    videoPath = req.file.path;
+    audioPath = `uploads/${req.file.filename}.mp3`;
+
+    console.log(`Processing: ${videoPath}`);
+
     await ffmpegService.extractAudio(videoPath, audioPath);
 
-    // 2. Transcribe
     const transcript = await transcribeAudio(audioPath);
 
     console.log("\n🔍 --- FULL TRANSCRIPT ANALYSIS ---");
@@ -100,12 +108,25 @@ app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, 
     // 4. Respond
     res.json({ 
       message: "Processing Complete", 
-      words: processedWords 
+      words: processedWords,
+      filename: req.file.filename,
     });
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Processing failed" });
+  } finally {
+    // --- CLEANUP ---
+    // Delete the generated MP3 immediately (we don't need it after transcription)
+    if (audioPath && fs.existsSync(audioPath)) {
+      fs.unlink(audioPath, (err) => {
+        if (err) console.error("Failed to delete audio:", err);
+      });
+    }
+    
+    // NOTE: Do NOT delete 'videoPath' yet if you plan to use it for the Export step later!
+    // If you delete the video now, the user won't be able to export the censored version.
+    // For a real app, you'd use a scheduled "Cron Job" to delete videos older than 1 hour.
   }
 });
 
@@ -122,15 +143,23 @@ app.post("/api/export-video", express.json(), async (req, res) => {
 
     console.log(`Processing export for: ${filename} with ${censorshipSegments.length} mutes.`);
 
+    if (!fs.existsSync(inputPath)) {
+        console.error("Input file not found:", inputPath);
+        return res.status(404).json({ error: "Original video file expired or not found." });
+    }
+
     // 1. Run the FFmpeg Job
     await ffmpegService.censorVideo(inputPath, outputPath, censorshipSegments);
 
     // 2. Send the file back to the user
     // res.download automatically sets the headers for a file download
-    res.download(outputPath, `censored_${filename}`, (err) => {
+    res.download(outputPath, `censored_video.mp4`, (err) => {
       if (err) {
         console.error("Download error:", err);
         // Note: Can't send JSON error here if headers are already sent
+      }
+      if (fs.existsSync(outputPath)) {
+        fs.unlink(outputPath, () => {});
       }
     });
 
