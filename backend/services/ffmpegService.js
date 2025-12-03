@@ -1,4 +1,5 @@
 const { spawn } = require('child_process');
+const path = require('path');
 
 // const ffmpegpath = './ffmpeg/ffmpeg.exe'
 const ffmpegpath = 'ffmpeg'
@@ -11,7 +12,12 @@ const storage = multer.diskStorage({
     cb(null, 'uploads')
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname)
+    // Generate a unique suffix: Timestamp + Random Number
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    
+    // Create new name: fieldname-uniqueSuffix.extension
+    // Example: file-168392019-482910.mp4
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 

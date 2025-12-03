@@ -26,11 +26,12 @@ export default function Home() {
   };
 
   const [analysisResults, setAnalysisResults] = useState<any[] | null>(null);
-  const [currentFilename, setCurrentFilename] = useState<string | null>(null);
+  // const [currentFilename, setCurrentFilename] = useState<string | null>(null);
+  const [serverFilename, setServerFilename] = useState<string | null>(null);
 
   const handleAnalysisComplete = (results: any[], filename: string) => {
     setAnalysisResults(results);
-    setCurrentFilename(filename);
+    setServerFilename(filename);
   };
 
   return (
@@ -51,7 +52,7 @@ export default function Home() {
         ) : (
           <Results 
             initialWords={analysisResults}
-            filename={currentFilename!}
+            filename={serverFilename!}
             onReset={() => setAnalysisResults(null)} 
           />
         )}
