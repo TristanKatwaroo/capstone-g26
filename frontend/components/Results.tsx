@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { Download, Loader2, RotateCcw} from "lucide-react"
+
 
 // Define the shape of the data coming from the Backend
 interface BackendWord {
@@ -122,12 +125,15 @@ export default function Results({ initialWords, filename, onReset }: ResultsProp
                 The system flagged {displayWords.length} words. Uncheck any you want to keep.
             </p>
         </div>
-        <button 
-          onClick={onReset}
-          className="text-sm opacity-50 hover:opacity-100 underline"
-        >
-          Upload New Video
-        </button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onReset}
+            className="inline-flex items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Upload New Video
+          </Button>
       </div>
 
       {/* Results Table */}
@@ -194,17 +200,24 @@ export default function Results({ initialWords, filename, onReset }: ResultsProp
 
       {/* Actions Footer */}
       <div className="mt-8 flex justify-end gap-4">
-        <button
+        <Button
           onClick={handleExport}
           disabled={isExporting}
-          className={`px-8 py-3 rounded-lg font-semibold text-white transition-all shadow-lg
-            ${isExporting 
-              ? "bg-gray-400 cursor-not-allowed" 
-              : "bg-blue-600 hover:bg-blue-700 hover:shadow-blue-500/20"
-            }`}
+          size="lg"
+          className="px-8 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 inline-flex items-center"
         >
-          {isExporting ? "Processing Export..." : "Export Video"}
-        </button>
+          {isExporting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing Export...
+            </>
+          ) : (
+            <>
+              <Download className="mr-2 h-4 w-4" />
+              Export Video
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

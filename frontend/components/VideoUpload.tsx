@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button"
+import { ArrowUpIcon, Loader2 } from "lucide-react"
 
 interface VideoUploadProps {
   onAnalysisComplete: (words: any[], serverFilename: string) => void;
@@ -146,24 +148,33 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
           </div>
 
           {/* Process Button */}
-          <button
-            onClick={handleUpload}
-            disabled={isUploading}
-            className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all
-              ${isUploading 
-                ? "bg-blue-400 cursor-not-allowed opacity-70" 
-                : "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/20"
-              }`}
-          >
-            {isUploading ? "Processing..." : "Process Video"}
-          </button>
+        <Button
+  type="button"
+  onClick={handleUpload}
+  disabled={isUploading}
+  size="lg"
+  className="w-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 disabled:text-white"
+>
+  {isUploading ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+      Processing...
+    </>
+  ) : (
+    <>
+      <ArrowUpIcon className="mr-2 h-4 w-4 text-white" />
+      Process Video
+    </>
+  )}
+</Button>
+
 
           {/* Status Message */}
           {statusMessage && (
             <div className={`p-3 rounded-lg text-sm text-center ${
               statusMessage.startsWith("Error") 
                 ? "bg-red-500/10 text-red-600 border border-red-500/20" 
-                : "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+                : "bg-blue-500/10 text-white-600 border border-blue-500/20"
             }`}>
               {statusMessage}
             </div>
