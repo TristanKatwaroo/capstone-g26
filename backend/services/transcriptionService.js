@@ -28,12 +28,9 @@ const transcribeAudio = async (filePath) => {
     // Step 2: Submit for transcription
     const transcript = await client.transcripts.transcribe({
       audio: uploadUrl,
-      // We don't need speaker labels for the MVP, but we absolutely need word timestamps
-      // which AssemblyAI provides by default.
-      speech_model: 'best',
-      word_boost: blackList, // Tell AI: "These words are important, don't skip them"
-      boost_param: 'high',   // Increase sensitivity to these words
-      filter_profanity: false // Explicitly disable any default censoring
+      speech_model: 'slam-1', 
+      keyterms_prompt: blackList, 
+      filter_profanity: false, 
     });
 
     // Step 3: Check status
