@@ -1,6 +1,4 @@
 require('dotenv').config();
-// Making sure it reads the key correctly
-console.log("AssemblyAI Key:", process.env.ASSEMBLYAI_API_KEY);
 
 const { AssemblyAI } = require('assemblyai');
 //const blacklist = ["test", "service"];
@@ -16,9 +14,14 @@ const client = new AssemblyAI({
  * @param {string} filePath - The local path to the audio file (e.g., './uploads/audio.mp3')
  * @returns {Promise<Object>} - The transcript object containing the 'words' array.
  */
-const transcribeAudio = async (filePath) => {
+const transcribeAudio = async (filePath, customWordList = null) => {
   try {
     console.log(`🎤 Starting transcription for: ${filePath}`);
+
+    const activeKeyterms =
+      Array.isArray(customWordList) && customWordList.length > 0
+        ? customWordList
+        : blackList;
 
     // Step 1: Upload the file to AssemblyAI
     // (AssemblyAI needs a URL to transcribe. This uploads local files to their temp storage.)
@@ -28,8 +31,8 @@ const transcribeAudio = async (filePath) => {
     // Step 2: Submit for transcription
     const transcript = await client.transcripts.transcribe({
       audio: uploadUrl,
-      speech_model: 'slam-1', 
-      keyterms_prompt: blackList, 
+      speech_models: ['universal-3-pro'],
+      keyterms_prompt: activeKeyterms, 
       filter_profanity: false, 
     });
 
@@ -50,22 +53,26 @@ const transcribeAudio = async (filePath) => {
   }
 };
 
-//Replaces black listed words with "*censor*" for users to easily tell
-const filterblackList = (words) => {
-  return words.map(wordObj => {
-    const cleanDisplayWord = wordObj.text.replace(/[.,?!:;"]/g, "");
+const filterblackList = (words, customWordList = null) => {
+  const activeList =
+    Array.isArray(customWordList) && customWordList.length > 0
+      ? customWordList
+      : blackList;
 
-    // 2. Clean the text for Comparison (Lowercase)
+  const normalizedList = activeList
+    .map((word) => String(word).trim().toLowerCase())
+    .filter(Boolean);
+
+  return words.map(wordObj => {
+    const cleanDisplayWord = wordObj.text.replace(/[.,?!:;\"]/g, "");
     const comparisonWord = cleanDisplayWord.toLowerCase();
 
-    // 3. Check against blacklist
-    const isMatch = blackList.includes(comparisonWord);
+    const isMatch = normalizedList.includes(comparisonWord);
 
-    // 4. Return the object with the NEW clean text
     return { 
-        ...wordObj, 
-        text: cleanDisplayWord, // <--- Overwrite the original text with the clean version
-        isCensored: isMatch 
+      ...wordObj, 
+      text: cleanDisplayWord,
+      isCensored: isMatch 
     };
   });
 };
