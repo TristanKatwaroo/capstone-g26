@@ -19,7 +19,11 @@ export async function getSavedWordList() {
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError || !user) {
+  if (userError) {
+    throw new Error(userError.message);
+  }
+
+  if (!user) {
     return null;
   }
 
@@ -30,7 +34,7 @@ export async function getSavedWordList() {
     .maybeSingle();
 
   if (error) {
-    throw error;
+    throw new Error(error.message);
   }
 
   return data;
@@ -44,7 +48,11 @@ export async function saveWordList(words: string[]) {
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError || !user) {
+  if (userError) {
+    throw new Error(userError.message);
+  }
+
+  if (!user) {
     throw new Error("You must be logged in to save a word list.");
   }
 
@@ -61,7 +69,10 @@ export async function saveWordList(words: string[]) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      throw new Error(error.message);
+    }
+
     return data;
   }
 
@@ -75,6 +86,9 @@ export async function saveWordList(words: string[]) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw new Error(error.message);
+  }
+
   return data;
 }

@@ -22,6 +22,9 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  const [isSavingWordList, setIsSavingWordList] = useState(false);
+  const [wordListSaveMessage, setWordListSaveMessage] = useState<string | null>(null);
+
   useEffect(() => {
     async function loadSavedList() {
       try {
@@ -29,9 +32,16 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
 
         if (savedList?.words?.length) {
           setWordListInput(savedList.words.join(", "));
+          // setWordListSaveMessage("Saved word list loaded.");
         }
-      } catch (error) {
-        console.error("Failed to load saved word list:", error);
+      } catch (error: any) {
+        console.log("Failed to load saved word list:", {
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code,
+          raw: error,
+        });
       }
     }
 
@@ -67,16 +77,32 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
 
   const handleSaveWordList = async () => {
     if (parsedWords.length === 0) {
-      setStatusMessage("Error: Enter at least one word before saving.");
+      setWordListSaveMessage("Enter at least one word before saving.");
       return;
     }
 
+    setIsSavingWordList(true);
+    setWordListSaveMessage(null);
+
     try {
       await saveWordList(parsedWords);
-      setStatusMessage("Word list saved successfully.");
-    } catch (error) {
-      console.error("Failed to save word list:", error);
-      setStatusMessage("Error: Failed to save word list. Make sure you are logged in.");
+      setWordListSaveMessage("Word list saved successfully.");
+    } catch (error: any) {
+      console.log("Failed to save word list:", {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        raw: error,
+      });
+
+      setWordListSaveMessage(
+        error?.message
+          ? `Could not save word list: ${error.message}`
+          : "Could not save word list."
+      );
+    } finally {
+      setIsSavingWordList(false);
     }
   };
 
@@ -131,7 +157,10 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
 
         <textarea
           value={wordListInput}
-          onChange={(event) => setWordListInput(event.target.value)}
+          onChange={(event) => {
+            setWordListInput(event.target.value);
+            setWordListSaveMessage(null);
+          }}
           placeholder="Enter words separated by commas, e.g. test, secret, private name"
           className="w-full min-h-28 rounded-md border border-foreground/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-blue-500"
           disabled={isUploading}
@@ -141,7 +170,7 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
           Leave blank to use the default blacklist.
         </p>
 
-        {parsedWords.length > 0 && (
+        {/* {parsedWords.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-medium opacity-70 mb-2">
               Words to detect:
@@ -158,18 +187,38 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         <Button
           type="button"
           variant="secondary"
           onClick={handleSaveWordList}
-          disabled={isUploading || parsedWords.length === 0}
+          disabled={isUploading || isSavingWordList || parsedWords.length === 0}
           className="mt-4 inline-flex items-center gap-2"
         >
-          <Save className="h-4 w-4" />
-          Save Word List
+          {isSavingWordList ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              Save Word List
+            </>
+          )}
         </Button>
+        {wordListSaveMessage && (
+          <p
+            className={`mt-3 text-sm ${
+              wordListSaveMessage.includes("successfully")
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-600 dark:text-red-400"
+            }`}
+          >
+            {wordListSaveMessage}
+          </p>
+        )}
       </div>
 
       {/* Upload Zone */}
