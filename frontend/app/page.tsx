@@ -9,6 +9,7 @@ export default function Home() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [analysisResults, setAnalysisResults] = useState<any[] | null>(null);
   const [serverFilename, setServerFilename] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function getUser() {
@@ -24,9 +25,14 @@ export default function Home() {
     getUser();
   }, []);
 
-  const handleAnalysisComplete = (results: any[], filename: string) => {
+  const handleAnalysisComplete = (
+    results: any[],
+    filename: string,
+    previewUrl: string
+  ) => {
     setAnalysisResults(results);
     setServerFilename(filename);
+    setVideoUrl(previewUrl);
   };
 
   return (
@@ -85,7 +91,16 @@ export default function Home() {
           <Results
             initialWords={analysisResults}
             filename={serverFilename!}
-            onReset={() => setAnalysisResults(null)}
+            videoUrl={videoUrl!}
+            onReset={() => {
+              if (videoUrl?.startsWith("blob:")) {
+                URL.revokeObjectURL(videoUrl);
+              }
+
+              setAnalysisResults(null);
+              setServerFilename(null);
+              setVideoUrl(null);
+            }}
           />
         )}
       </main>

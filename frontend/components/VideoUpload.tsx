@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpIcon, Loader2, Save } from "lucide-react";
 
 interface VideoUploadProps {
-  onAnalysisComplete: (words: any[], serverFilename: string) => void;
+  onAnalysisComplete: (
+    words: any[],
+    serverFilename: string,
+    videoPreviewUrl: string
+  ) => void;
 }
 
 export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
@@ -134,7 +138,13 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
         setStatusMessage("Success! Found words. Loading results...");
 
         setTimeout(() => {
-          onAnalysisComplete(data.words, data.filename);
+          const localPreviewUrl = URL.createObjectURL(selectedFile);
+
+          onAnalysisComplete(
+            data.words,
+            data.filename,
+            data.videoUrl ?? localPreviewUrl
+          );
         }, 1000);
       } else {
         setStatusMessage("Processing complete, but no transcript returned.");

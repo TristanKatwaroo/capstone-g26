@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import TimelineReview from "@/components/TimelineReview";
 import { Button } from "@/components/ui/button"
 import { Download, Loader2, RotateCcw} from "lucide-react"
 
@@ -23,10 +24,11 @@ interface UIWord extends BackendWord {
 interface ResultsProps {
   initialWords: BackendWord[];
   filename: string;
+  videoUrl: string;
   onReset: () => void;
 }
 
-export default function Results({ initialWords, filename, onReset }: ResultsProps) {
+export default function Results({ initialWords, filename, videoUrl, onReset }: ResultsProps) {
   // 1. Initialize State: Map backend data to UI data
   // We explicitly separate "Detection" (isFlagged) from "Action" (isSelected)
   const [words, setWords] = useState<UIWord[]>(() => 
@@ -36,12 +38,30 @@ export default function Results({ initialWords, filename, onReset }: ResultsProp
       isSelected: w.isCensored // By default, we select everything that was detected
     }))
   );
-
   const [isExporting, setIsExporting] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [videoDuration, setVideoDuration] = useState(0);
+
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+
+  const resolvedVideoUrl =
+    videoUrl.startsWith("blob:") || videoUrl.startsWith("http")
+      ? videoUrl
+      : `${API_BASE_URL}${videoUrl}`;
 
   // We only want to display words that were flagged by the system
   // Using 'isFlagged' ensures they don't disappear if the user unchecks them.
   const displayWords = words.filter((w) => w.isFlagged);
+
+  const timelineMarkers = displayWords.map((word, index) => ({
+    id: `${word.text}-${word.start}-${word.end}-${index}`,
+    text: word.text,
+    start: word.start,
+    end: word.end,
+    confidence: word.confidence,
+    isSelected: word.isSelected,
+  }));
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -134,6 +154,25 @@ export default function Results({ initialWords, filename, onReset }: ResultsProp
             <RotateCcw className="h-4 w-4" />
             Upload New Video
           </Button>
+      </div>
+
+      <div className="mb-8 space-y-4">
+        <div className="border border-foreground/10 rounded-xl overflow-hidden bg-black">
+          <video
+            ref={videoRef}
+            src={resolvedVideoUrl}
+            controls
+            className="w-full max-h-[500px]"
+            onLoadedMetadata={(event) => {
+              setVideoDuration(event.currentTarget.duration);
+            }}
+          />
+        </div>
+
+        <TimelineReview
+          markers={timelineMarkers}
+          videoDuration={videoDuration}
+        />
       </div>
 
       {/* Results Table */}
