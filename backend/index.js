@@ -76,10 +76,10 @@ app.post('/api/test-transcription', async (req, res) => {
   }
 });
 
-app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, res) => {
+app.post("/api/process-video", ffmpegService.upload.single("file"), async (req, res) => {
   let videoPath = null;
   let audioPath = null;
-  
+
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -88,26 +88,32 @@ app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, 
     videoPath = req.file.path;
     audioPath = `uploads/${req.file.filename}.mp3`;
 
+    // Parse custom word list BEFORE transcription
+    let submittedWordList = null;
+
+    if (req.body.wordList) {
+      try {
+        submittedWordList = JSON.parse(req.body.wordList);
+      } catch (error) {
+        console.error("Invalid wordList JSON:", error);
+        return res.status(400).json({ error: "Invalid word list format" });
+      }
+    }
+
     console.log(`Processing: ${videoPath}`);
+    console.log("Submitted word list:", submittedWordList);
 
     await ffmpegService.extractAudio(videoPath, audioPath);
 
-    const transcript = await transcribeAudio(audioPath);
+    const transcript = await transcribeAudio(audioPath, submittedWordList);
 
-    console.log("\n🔍 --- FULL TRANSCRIPT ANALYSIS ---");
-    transcript.words.forEach((word, index) => {
-      console.log(
-        `[${index}] Word: "${word.text}" | Confidence: ${(word.confidence * 100).toFixed(1)}%`
-      );
-    });
-    console.log("------------------------------------\n");
+    const processedWords = filterblackList(
+      transcript.words,
+      submittedWordList
+    );
 
-    // 3. Filter
-    const processedWords = filterblackList(transcript.words);
-
-    // 4. Respond
-    res.json({ 
-      message: "Processing Complete", 
+    res.json({
+      message: "Processing Complete",
       words: processedWords,
       filename: req.file.filename,
     });
@@ -116,17 +122,11 @@ app.post("/api/process-video", ffmpegService.upload.single('file'), async (req, 
     console.error(error);
     res.status(500).json({ error: "Processing failed" });
   } finally {
-    // --- CLEANUP ---
-    // Delete the generated MP3 immediately (we don't need it after transcription)
     if (audioPath && fs.existsSync(audioPath)) {
       fs.unlink(audioPath, (err) => {
         if (err) console.error("Failed to delete audio:", err);
       });
     }
-    
-    // NOTE: Do NOT delete 'videoPath' yet if you plan to use it for the Export step later!
-    // If you delete the video now, the user won't be able to export the censored version.
-    // For a real app, you'd use a scheduled "Cron Job" to delete videos older than 1 hour.
   }
 });
 

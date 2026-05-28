@@ -1,33 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import VideoUpload from "../components/VideoUpload";
 import Results from "../components/Results";
 
 export default function Home() {
-
-  const handleTestConnection = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/api/test');
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      console.log("Response from backend:", data.message);
-      alert("Success! Backend says: " + data.message);
-
-    } catch (error) {
-      console.error("Failed to fetch from backend:", error);
-      alert("Error: Could not connect to backend. Check console.");
-    }
-  };
-
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [analysisResults, setAnalysisResults] = useState<any[] | null>(null);
-  // const [currentFilename, setCurrentFilename] = useState<string | null>(null);
   const [serverFilename, setServerFilename] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getUser() {
+      const supabase = createClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setUserEmail(user?.email ?? null);
+    }
+
+    getUser();
+  }, []);
 
   const handleAnalysisComplete = (results: any[], filename: string) => {
     setAnalysisResults(results);
@@ -35,14 +30,51 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8">
-      <main className="flex flex-col items-center gap-8 w-full">
-        
+    <div className="flex min-h-screen flex-col p-8">
+      <div className="w-full flex justify-end mb-6">
+        {userEmail ? (
+          <div className="flex items-center gap-3 text-sm">
+            <span className="opacity-70">{userEmail}</span>
+            <button
+              type="button"
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                window.location.href = "/login";
+              }}
+              className="px-3 py-2 rounded-md border border-foreground/20 hover:bg-foreground/5"
+            >
+              Log Out
+            </button>
+          </div>
+        ) : (
+          <a
+            href="/login"
+            className="px-3 py-2 rounded-md border border-foreground/20 text-sm hover:bg-foreground/5"
+          >
+            Log In
+          </a>
+        )}
+      </div>
+
+      <main className="flex flex-1 flex-col items-center justify-center gap-8 w-full">
         <h1 className="text-4xl font-bold tracking-tight">
           CleanCut
         </h1>
-        
-        {!analysisResults ? (
+
+        {!userEmail ? (
+          <div className="text-center border border-foreground/10 rounded-xl p-6 max-w-md bg-foreground/5">
+            <p className="mb-4 opacity-80">
+              Please log in to upload videos and save custom word lists.
+            </p>
+            <a
+              href="/login"
+              className="inline-block px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Log In
+            </a>
+          </div>
+        ) : !analysisResults ? (
           <>
             <p className="text-lg text-center max-w-xl opacity-70">
               Upload a video to automatically detect and flag profanity using AI.
@@ -50,13 +82,12 @@ export default function Home() {
             <VideoUpload onAnalysisComplete={handleAnalysisComplete} />
           </>
         ) : (
-          <Results 
+          <Results
             initialWords={analysisResults}
             filename={serverFilename!}
-            onReset={() => setAnalysisResults(null)} 
+            onReset={() => setAnalysisResults(null)}
           />
         )}
-
       </main>
     </div>
   );
