@@ -1,22 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getSavedWordList, saveWordList, parseCommaSeparatedWords } from "@/lib/wordLists";
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon, Loader2, Save } from "lucide-react";
 
 interface VideoUploadProps {
   onAnalysisComplete: (words: any[], serverFilename: string) => void;
-}
-
-function parseCommaSeparatedWords(input: string): string[] {
-  return Array.from(
-    new Set(
-      input
-        .split(",")
-        .map((word) => word.trim().toLowerCase())
-        .filter(Boolean)
-    )
-  );
 }
 
 export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
@@ -31,6 +21,22 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
 
   const [isUploading, setIsUploading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadSavedList() {
+      try {
+        const savedList = await getSavedWordList();
+
+        if (savedList?.words?.length) {
+          setWordListInput(savedList.words.join(", "));
+        }
+      } catch (error) {
+        console.error("Failed to load saved word list:", error);
+      }
+    }
+
+    loadSavedList();
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -65,10 +71,13 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
       return;
     }
 
-    // call Supabase saveWordList(parsedWords) helper here
-    console.log("Words to save:", parsedWords);
-
-    setStatusMessage("Word list ready to save. Supabase save logic goes here.");
+    try {
+      await saveWordList(parsedWords);
+      setStatusMessage("Word list saved successfully.");
+    } catch (error) {
+      console.error("Failed to save word list:", error);
+      setStatusMessage("Error: Failed to save word list. Make sure you are logged in.");
+    }
   };
 
   const handleUpload = async () => {
