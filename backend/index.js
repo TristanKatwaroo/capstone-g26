@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
-
+const path = require('path')
 const ffmpegService = require('./services/ffmpegService');
 const { transcribeAudio, filterblackList } = require('./services/transcriptionService');
 
@@ -76,6 +76,28 @@ app.post('/api/test-transcription', async (req, res) => {
   }
 });
 
+app.get("/api/video/:filename", async (req, res) => {
+
+  console.log("Inside load video by name")
+
+  const { filename } = req.params
+
+  const finalFileName = path.basename(filename)
+  const finalUploadFolder = path.join(__dirname, 'uploads')
+
+  const finalVideoPath = path.join(finalUploadFolder, finalFileName)
+
+  if(!fs.existsSync(finalVideoPath)){
+    console.log("Error")
+    return res.status(404).json({error : "file not found on the server"})
+  }
+  console.log("filename ",filename)
+  console.log("FINAL FILE NAME ",finalFileName)
+  console.log("FINAL UPLOAD FOLDER ",finalUploadFolder)
+  console.log(finalVideoPath)
+  res.sendFile(finalVideoPath)
+})
+
 app.post("/api/process-video", ffmpegService.upload.single("file"), async (req, res) => {
   let videoPath = null;
   let audioPath = null;
@@ -116,6 +138,7 @@ app.post("/api/process-video", ffmpegService.upload.single("file"), async (req, 
       message: "Processing Complete",
       words: processedWords,
       filename: req.file.filename,
+      videoUrl: `/api/video/${req.file.filename}`
     });
 
   } catch (error) {
