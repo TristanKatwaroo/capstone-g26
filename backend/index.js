@@ -77,9 +77,6 @@ app.post('/api/test-transcription', async (req, res) => {
 });
 
 app.get("/api/video/:filename", async (req, res) => {
-
-  console.log("Inside load video by name")
-
   const { filename } = req.params
 
   const finalFileName = path.basename(filename)
@@ -91,10 +88,7 @@ app.get("/api/video/:filename", async (req, res) => {
     console.log("Error")
     return res.status(404).json({error : "file not found on the server"})
   }
-  console.log("filename ",filename)
-  console.log("FINAL FILE NAME ",finalFileName)
-  console.log("FINAL UPLOAD FOLDER ",finalUploadFolder)
-  console.log(finalVideoPath)
+ 
   res.sendFile(finalVideoPath)
 })
 
