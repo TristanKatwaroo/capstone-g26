@@ -77,20 +77,39 @@ app.post('/api/test-transcription', async (req, res) => {
 });
 
 app.get("/api/video/:filename", async (req, res) => {
-  const { filename } = req.params
+  //Extract filename passed to url
+  
+  const { filename } = req.params;
 
-  const finalFileName = path.basename(filename)
-  const finalUploadFolder = path.join(__dirname, 'uploads')
+  //Validate File Extension
+  const supportedFileTypes = ["mp4", "mov"];
+  const extension = filename.split(".").pop().toLocaleLowerCase();
+  try{
+    if(!supportedFileTypes.includes(extension)){
+      return res.status(404).json({error: "Unsupported file format"});
+    }
 
-  const finalVideoPath = path.join(finalUploadFolder, finalFileName)
+  //Store only the file name and uploads folder path
+  //Combine for final path location of the requested video
+    const finalFileName = path.basename(filename);
+    const finalUploadFolder = path.join(__dirname, 'uploads');
 
-  if(!fs.existsSync(finalVideoPath)){
-    console.log("Error")
-    return res.status(404).json({error : "file not found on the server"})
-  }
- 
-  res.sendFile(finalVideoPath)
-})
+    const finalVideoPath = path.join(finalUploadFolder, finalFileName);
+
+
+
+    if(!fs.existsSync(finalVideoPath)){
+      console.log("Error");
+      return res.status(404).json({error : "file not found on the server"});
+    };
+
+    res.sendFile(finalVideoPath);
+  }catch(e){
+    return res.status(404).json({error : "Server Error"})
+    console.log(e.message)
+  };
+
+});
 
 app.post("/api/process-video", ffmpegService.upload.single("file"), async (req, res) => {
   let videoPath = null;
