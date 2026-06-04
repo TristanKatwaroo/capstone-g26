@@ -7,6 +7,7 @@ interface TimelineMarker {
   end: number;   // milliseconds from AssemblyAI
   confidence: number;
   isSelected: boolean;
+  isActive?: boolean;
 }
 
 interface TimelineReviewProps {
@@ -53,9 +54,11 @@ export default function TimelineReview({
               className={`absolute top-1/2 h-6 w-4 -translate-y-1/2 -translate-x-1/2 rounded-full border transition cursor-pointer
                 hover:scale-125 hover:ring-2 hover:ring-red-300 focus:outline-none focus:ring-2 focus:ring-red-300
                 ${
-                  marker.isSelected
-                    ? "bg-red-500 border-red-300"
-                    : "bg-foreground/30 border-foreground/20 opacity-50"
+                  marker.isActive
+                    ? "bg-blue-400 border-blue-200 ring-3 ring-blue-300 scale-125 z-20"
+                    : marker.isSelected
+                      ? "bg-red-500 border-red-300 z-10"
+                      : "bg-foreground/30 border-foreground/20 opacity-50 z-0"
                 }`}
               style={{ left: `${left}%` }}
               title={`Jump to "${marker.text}" at ${formatTime(marker.start / 1000)}`}
