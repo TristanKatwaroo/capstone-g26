@@ -41,6 +41,7 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   const [isExporting, setIsExporting] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [currentVideoTime, setCurrentVideoTime] = useState(0);
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
@@ -54,14 +55,24 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   // Using 'isFlagged' ensures they don't disappear if the user unchecks them.
   const displayWords = words.filter((w) => w.isFlagged);
 
-  const timelineMarkers = displayWords.map((word, index) => ({
+  const timelineMarkers = displayWords.map((word, index) => {
+  const currentTimeMs = currentVideoTime * 1000;
+
+  // Buffer makes short words easier to highlight
+  const ACTIVE_BUFFER_MS = 100;
+
+  return {
     id: `${word.text}-${word.start}-${word.end}-${index}`,
     text: word.text,
     start: word.start,
     end: word.end,
     confidence: word.confidence,
     isSelected: word.isSelected,
-  }));
+    isActive:
+      currentTimeMs >= word.start - ACTIVE_BUFFER_MS &&
+      currentTimeMs <= word.end + ACTIVE_BUFFER_MS,
+  };
+});
 
   const handleMarkerClick = (marker: { start: number }) => {
   if (!videoRef.current) return;
@@ -69,6 +80,7 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   const timeInSeconds = marker.start / 1000;
 
   videoRef.current.currentTime = timeInSeconds;
+  setCurrentVideoTime(timeInSeconds);
 
   // Do not autoplay after jumping
   videoRef.current.pause();
@@ -177,6 +189,9 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
             onLoadedMetadata={(event) => {
               setVideoDuration(event.currentTarget.duration);
             }}
+            onTimeUpdate={(event) => {
+              setCurrentVideoTime(event.currentTarget.currentTime);
+            }}
           />
         </div>
 
@@ -185,7 +200,7 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
           videoDuration={videoDuration}
           onMarkerClick={handleMarkerClick}
         />
-      </div>
+      </div>s
 
       {/* Results Table */}
       {/* Used border-foreground/10 instead of specific gray borders */}
