@@ -63,6 +63,17 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
     isSelected: word.isSelected,
   }));
 
+  const handleMarkerClick = (marker: { start: number }) => {
+  if (!videoRef.current) return;
+
+  const timeInSeconds = marker.start / 1000;
+
+  videoRef.current.currentTime = timeInSeconds;
+
+  // Do not autoplay after jumping
+  videoRef.current.pause();
+};
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -172,6 +183,7 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
         <TimelineReview
           markers={timelineMarkers}
           videoDuration={videoDuration}
+          onMarkerClick={handleMarkerClick}
         />
       </div>
 
