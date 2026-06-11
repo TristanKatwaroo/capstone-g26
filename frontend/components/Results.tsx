@@ -183,6 +183,23 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   const deleteManualCensor = (id: string) =>
     setManualSegments((prev) => prev.filter((seg) => seg.id !== id));
 
+  // Updates a manual censor after it is moved or resized on the timeline.
+const updateManualCensorRange = (id: string, start: number, end: number) => {
+  const MIN_SEGMENT_DURATION = 0.1;
+
+  setManualSegments((prev) =>
+    prev.map((seg) => {
+      if (seg.id !== id) return seg;
+
+      return {
+        ...seg,
+        start,
+        end,
+      };
+    })
+  );
+};
+
   // seconds -> m:ss (e.g. 75 -> "1:15").
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -321,6 +338,7 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
           onMarkerClick={handleMarkerClick}
           manualSegments={manualSegments}
           onDeleteManualSegment={deleteManualCensor}
+          onChangeManualSegment={updateManualCensorRange}
         />
 
         <ManualCensorControls
