@@ -109,7 +109,7 @@ const getManualSegmentWidth = (startSeconds: number, endSeconds: number) => {
         return (
           <div
             key={segment.id}
-            className="absolute top-1/2 h-6 -translate-y-1/2 rounded-full bg-blue-500/70 border border-blue-300 flex items-center justify-end px-1"
+            className="absolute top-1/2 h-6 -translate-y-1/2 rounded-full bg-purple-500/70 border border-purple-300 flex items-center justify-end px-1"
             style={{
               left: `${left}%`,
               width: `${Math.max(width, 4)}%`,
