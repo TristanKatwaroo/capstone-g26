@@ -178,6 +178,8 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   };
 
   // Minimal hook the dedicated deletion UI builds on later.
+  //Deletes only the manual censor that matches the selected id.
+  // Automatic flagged words are not affected because they are stored separately.
   const deleteManualCensor = (id: string) =>
     setManualSegments((prev) => prev.filter((seg) => seg.id !== id));
 
@@ -209,12 +211,22 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
     // Build the list of time ranges to mute from the still-selected words,
     // converting their times from ms to the seconds the backend expects.
     // (Manual censors are already in seconds and would be added here later.)
-    const segmentsToMute = words
-      .filter(w => w.isSelected)
-      .map(w => ({
+   const automaticSegmentsToMute = words
+      .filter((w) => w.isSelected)
+      .map((w) => ({
         start: w.start / 1000,
-        end: w.end / 1000
+        end: w.end / 1000,
       }));
+
+    const manualSegmentsToMute = manualSegments.map((seg) => ({
+      start: seg.start,
+      end: seg.end,
+    }));
+
+    const segmentsToMute = [
+      ...automaticSegmentsToMute,
+      ...manualSegmentsToMute,
+    ];
 
     try {
       console.log("Requesting export for", filename, segmentsToMute);
@@ -307,6 +319,8 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
           markers={timelineMarkers}
           videoDuration={videoDuration}
           onMarkerClick={handleMarkerClick}
+          manualSegments={manualSegments}
+          onDeleteManualSegment={deleteManualCensor}
         />
 
         <ManualCensorControls
