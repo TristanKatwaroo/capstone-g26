@@ -178,14 +178,14 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   };
 
   // Minimal hook the dedicated deletion UI builds on later.
-  //Deletes only the manual censor that matches the selected id.
+  // Deletes only the manual censor that matches the selected id.
   // Automatic flagged words are not affected because they are stored separately.
   const deleteManualCensor = (id: string) =>
     setManualSegments((prev) => prev.filter((seg) => seg.id !== id));
 
   // Updates a manual censor after it is moved or resized on the timeline.
 const updateManualCensorRange = (id: string, start: number, end: number) => {
-  const MIN_SEGMENT_DURATION = 0.1;
+
 
   setManualSegments((prev) =>
     prev.map((seg) => {
@@ -248,7 +248,7 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
     try {
       console.log("Requesting export for", filename, segmentsToMute);
 
-      const response = await fetch("http://localhost:8080/api/export-video", {
+      const response = await fetch(`${API_BASE_URL}/api/export-video`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
