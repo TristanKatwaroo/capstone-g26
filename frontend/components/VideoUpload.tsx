@@ -14,6 +14,8 @@ interface VideoUploadProps {
 }
 
 export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
+  const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -122,7 +124,7 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
 
       formData.append("wordList", JSON.stringify(parsedWords));
 
-      const response = await fetch("http://localhost:8080/api/process-video", {
+      const response = await fetch(`${API_BASE_URL}/api/process-video`, {
         method: "POST",
         body: formData,
       });
