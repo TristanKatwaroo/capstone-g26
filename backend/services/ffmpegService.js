@@ -1,8 +1,8 @@
 const { spawn } = require('child_process');
 const path = require('path');
-
+const ffmpegpath = require('ffmpeg-static');
 // const ffmpegpath = './ffmpeg/ffmpeg.exe'
-const ffmpegpath = 'ffmpeg'
+//const ffmpegpath = 'ffmpeg'
 
 
 const multer = require('multer');
