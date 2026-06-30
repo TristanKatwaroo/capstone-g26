@@ -13,9 +13,17 @@ const PORT = process.env.PORT || 8080;
 
 // const multer = require('multer');
 
+const allowedOrigins = [
+  "http://localhost:3000/",
+  process.env.FRONTEND_URL
+]
 
 // --- MIDDLEWARE ---
-app.use(cors());
+var corsOptions = {
+  origin: allowedOrigins
+}
+
+app.use(cors(corsOptions))
 app.use(express.json());
 
 // const storage = multer.diskStorage({
