@@ -115,7 +115,7 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
     if (!selectedFile) return;
 
     setIsUploading(true);
-    setStatusMessage("Uploading and processing...");
+    setStatusMessage(null);
 
     try {
       const formData = new FormData();

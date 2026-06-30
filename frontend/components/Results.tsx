@@ -66,6 +66,7 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
     }))
   );
   const [isExporting, setIsExporting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   // useRef = a handle to the real <video> element (set via ref={videoRef}
   // below) so we can read/seek playback. Unlike state, changing it doesn't
   // re-render. `.current` is null until the element appears.
@@ -90,6 +91,9 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
 
   // Filter on isFlagged (not isSelected) so un-checked rows stay visible.
   const displayWords = words.filter((w) => w.isFlagged);
+
+  // How many regions Export would actually mute
+  const censorCount = words.filter((w) => w.isSelected).length + manualSegments.length;
 
   // Build the timeline dots fresh on every render so the "currently playing"
   // highlight (isActive) follows the video as it plays. Word times are in ms,
@@ -219,9 +223,22 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
     setWords(newWords);
   };
 
+  // Bulk toggle: if every flagged word is already selected, clear them all;
+  // otherwise select them all
+  const allFlaggedSelected =
+    displayWords.length > 0 && displayWords.every((w) => w.isSelected);
+
+  const toggleSelectAll = () => {
+    const nextSelected = !allFlaggedSelected;
+    setWords((prev) =>
+      prev.map((w) => (w.isFlagged ? { ...w, isSelected: nextSelected } : w)),
+    );
+  };
+
   // POST the selected regions to the backend and download the muted video.
   const handleExport = async () => {
     setIsExporting(true);
+    setStatusMessage(null);
 
     // Build the list of time ranges to mute from the still-selected words,
     // converting their times from ms to the seconds the backend expects.
@@ -273,11 +290,16 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      alert("Video downloaded successfully!");
+      setStatusMessage("Video downloaded successfully.");
 
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export video.");
+      const isNetworkError = error instanceof TypeError;
+      setStatusMessage(
+        isNetworkError
+          ? "Error: Couldn't reach the server. It may be waking up, wait a moment and try again."
+          : "Error: Failed to export video. Please try again."
+      );
     } finally {
       setIsExporting(false);
     }
@@ -351,6 +373,22 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
 
       {/* One row per flagged word with a censor toggle. */}
       <div className="border border-foreground/10 rounded-xl overflow-hidden shadow-sm">
+        {/* Bulk action: select/clear every flagged word at once. */}
+        {displayWords.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-3 border-b border-foreground/10 bg-foreground/[0.02]">
+            <span className="text-xs opacity-60">
+              {censorCount} selected to censor
+            </span>
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="text-xs font-medium text-blue-600 hover:underline"
+            >
+              {allFlaggedSelected ? "Deselect all" : "Select all"}
+            </button>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-foreground/5 border-b border-foreground/10">
@@ -367,8 +405,11 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
               {displayWords.map((word, index) => (
                 <tr
                     key={index}
+                    // Click a row to jump the video to that word
+                    onClick={() => handleMarkerClick({ start: word.start })}
+                    title="Jump to this word in the video"
                     // Red tint when selected, dimmed when opted out.
-                    className={`transition-colors ${
+                    className={`cursor-pointer transition-colors ${
                         word.isSelected
                             ? "bg-red-500/10 hover:bg-red-500/15"
                             : "opacity-60 hover:opacity-100 hover:bg-foreground/5"
@@ -383,7 +424,11 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
                   <td className="px-6 py-4 opacity-70">
                     {(word.confidence * 100).toFixed(1)}%
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  {/* Stop the row's seek-on-click from firing when the user is just flipping the censor toggle. */}
+                  <td
+                    className="px-6 py-4 text-right"
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     {/* CSS-only toggle: hidden checkbox drives the styled div via peer-checked. */}
                     <label className="inline-flex items-center cursor-pointer">
                       <input
@@ -411,10 +456,28 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
       </div>
 
       {/* Actions Footer */}
-      <div className="mt-8 flex justify-end gap-4">
+      <div className="mt-8 flex flex-col items-end gap-4">
+        {statusMessage && (
+          <div
+            className={`w-full p-3 rounded-lg text-sm text-center ${
+              statusMessage.startsWith("Error")
+                ? "bg-red-500/10 text-red-600 border border-red-500/20"
+                : "bg-blue-500/10 border border-blue-500/20"
+            }`}
+          >
+            {statusMessage}
+          </div>
+        )}
+
+        {censorCount === 0 && (
+          <p className="text-xs opacity-60">
+            Select at least one word or add a manual censor to export.
+          </p>
+        )}
+
         <Button
           onClick={handleExport}
-          disabled={isExporting}
+          disabled={isExporting || censorCount === 0}
           size="lg"
           className="px-8 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 inline-flex items-center"
         >
@@ -428,7 +491,7 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
           ) : (
             <>
               <Download className="mr-2 h-4 w-4" />
-              Export Video
+              Export Video{censorCount > 0 ? ` (${censorCount})` : ""}
             </>
           )}
         </Button>
