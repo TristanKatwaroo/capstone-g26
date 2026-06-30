@@ -12,17 +12,23 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    async function getUser() {
-      const supabase = createClient();
+    const supabase = createClient();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? null);
 
-      setUserEmail(user?.email ?? null);
-    }
+      if (window.location.search.includes("code=")) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    });
 
-    getUser();
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleAnalysisComplete = (
@@ -73,12 +79,6 @@ export default function Home() {
             <p className="mb-4 opacity-80">
               Please log in to upload videos and save custom word lists.
             </p>
-            <a
-              href="/login"
-              className="inline-block px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-            >
-              Log In
-            </a>
           </div>
         ) : !analysisResults ? (
           <>
