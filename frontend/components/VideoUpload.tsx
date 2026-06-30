@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { getSavedWordList, saveWordList, parseCommaSeparatedWords } from "@/lib/wordLists";
+import { API_BASE_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon, Loader2, Save } from "lucide-react";
 
@@ -122,7 +123,7 @@ export default function VideoUpload({ onAnalysisComplete }: VideoUploadProps) {
 
       formData.append("wordList", JSON.stringify(parsedWords));
 
-      const response = await fetch("http://localhost:8080/api/process-video", {
+      const response = await fetch(`${API_BASE_URL}/api/process-video`, {
         method: "POST",
         body: formData,
       });
