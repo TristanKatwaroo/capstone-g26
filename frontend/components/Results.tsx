@@ -7,6 +7,7 @@
 import { useRef, useState } from "react";
 import TimelineReview from "@/components/TimelineReview";
 import ManualCensorControls from "@/components/ManualCensorControls";
+import { API_BASE_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button"
 import { Download, Loader2, RotateCcw} from "lucide-react"
 
@@ -75,9 +76,6 @@ export default function Results({ initialWords, filename, videoUrl, onReset }: R
   const [videoDuration, setVideoDuration] = useState(0);
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
   const [manualSegments, setManualSegments] = useState<ManualCensorSegment[]>([]);
-
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
   // The video URL can arrive in three forms. A full "http..." URL or a
   // "blob:" URL (a local, in-browser file the user just picked) is already

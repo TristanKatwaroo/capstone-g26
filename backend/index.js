@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -6,6 +8,7 @@ const ffmpegService = require('./services/ffmpegService');
 const { transcribeAudio, filterblackList } = require('./services/transcriptionService');
 
 const app = express();
+// Render (and most hosts) inject the port to bind via process.env.PORT.
 const PORT = process.env.PORT || 8080;
 
 // const multer = require('multer');

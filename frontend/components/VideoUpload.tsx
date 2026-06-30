@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { getSavedWordList, saveWordList, parseCommaSeparatedWords } from "@/lib/wordLists";
+import { API_BASE_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon, Loader2, Save } from "lucide-react";
 
