@@ -260,6 +260,8 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
       ...manualSegmentsToMute,
     ];
 
+    const exportStart = performance.now();
+
     try {
       console.log("Requesting export for", filename, segmentsToMute);
 
@@ -290,7 +292,8 @@ const updateManualCensorRange = (id: string, start: number, end: number) => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      setStatusMessage("Video downloaded successfully.");
+      const exportSeconds = ((performance.now() - exportStart) / 1000).toFixed(1);
+      setStatusMessage(`Video exported in ${exportSeconds}s.`);
 
     } catch (error) {
       console.error("Export error:", error);
