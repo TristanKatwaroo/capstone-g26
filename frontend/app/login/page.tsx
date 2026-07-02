@@ -29,7 +29,7 @@ export default function LoginPage() {
       return;
     }
 
-    setMessage("Account created. You can now log in.");
+    setMessage("Please check your email to confirm your account.");
   };
 
   const handleLogin = async () => {
