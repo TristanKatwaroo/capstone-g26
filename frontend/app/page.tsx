@@ -70,9 +70,8 @@ export default function Home() {
       </div>
 
       <main className="flex flex-1 flex-col items-center justify-center gap-8 w-full">
-        <h1 className="text-4xl font-bold tracking-tight">
-          CleanCut
-        </h1>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="CleanCut" className="h-16 w-auto" />
 
         {!userEmail ? (
           <div className="text-center border border-foreground/10 rounded-xl p-6 max-w-md bg-foreground/5">
